@@ -189,25 +189,20 @@ def grafana_alert_to_markdown(alert_data: dict) -> list:
     """
     messages = []
     for alert in alert_data["alerts"]:
+        name = alert["labels"]["alertname"]
+        if "name" in alert["labels"]:
+            name = f"{name} - {alert["labels"]["name"]}"
+        elif "rulename" in alert["labels"]:
+            name = f"{name} - {alert["labels"]["rulename"]}"
         if alert['status'] == "firing":
             message = (
-                f"""**Firing 🔥**: {alert['labels']['alertname']}  
-    
-* **Instance:** {alert["valueString"]}
-* **Silence:** {alert["silenceURL"]}
-* **Started at:** {alert['startsAt']}
-* **Fingerprint:** {alert['fingerprint']}
-                """
+                f"""**Firing 🔥**: {name} ([silence]({alert["silenceURL"]}))"""
             )
         if alert['status'] == "resolved":
             end_at = dateutil.parser.isoparse(alert['endsAt'])
             start_at = dateutil.parser.isoparse(alert['startsAt'])
             message = (
-                f"""**Resolved 🥳**: {alert['labels']['alertname']}
-    
-* **Duration until resolved:** {end_at - start_at}
-* **Fingerprint:** {alert['fingerprint']}
-                """
+                f"""**Resolved 🥳**: {name}"""
             )
         messages.append(message)
     return messages
